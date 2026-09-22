@@ -12,14 +12,19 @@ import { fadeUpVariants, staggerContainer, useScrollReveal } from '@/utilities/a
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, logout, isLoading } = useAuth();
   const scrollReveal = useScrollReveal();
-  
+
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Wait for auth to load before checking authentication
+    if (isLoading) {
+      return;
+    }
+
     if (!isAuthenticated) {
       router.push('/login');
       return;
@@ -28,7 +33,7 @@ export default function DashboardPage() {
     const fetchDashboard = async () => {
       try {
         const response = await fetchWithAuth('http://localhost:5000/api/dashboard');
-        
+
         if (response.ok) {
           const data = await response.json();
           setDashboardData(data);
@@ -45,7 +50,7 @@ export default function DashboardPage() {
     };
 
     fetchDashboard();
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, isLoading, router]);
 
   if (loading) {
     return (

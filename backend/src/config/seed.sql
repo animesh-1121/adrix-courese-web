@@ -1,17 +1,17 @@
 -- Seed Data for Nursing Level Up Admin System
 
 -- Admin User
-INSERT INTO users (email, name, role) VALUES
-('admin@nursinglevelup.com', 'Admin User', 'ADMIN')
+INSERT INTO users (email, name, phone, password_hash, role) VALUES
+('admin@nursinglevelup.com', 'Admin User', '+919876543200', '$2b$10$ukitfS9Gve.S6Imyw0ifNOuZSrQ8Sw5ltQGsXsxh0aLKQp4/WJB02', 'ADMIN')
 ON CONFLICT (email) DO NOTHING;
 
 -- Student Users
-INSERT INTO users (email, name, phone, role) VALUES
-('student1@example.com', 'Rahul Sharma', '+919876543210', 'STUDENT'),
-('student2@example.com', 'Priya Patel', '+919876543211', 'STUDENT'),
-('student3@example.com', 'Amit Kumar', '+919876543212', 'STUDENT'),
-('student4@example.com', 'Sneha Singh', '+919876543213', 'STUDENT'),
-('student5@example.com', 'Vikram Joshi', '+919876543214', 'STUDENT')
+INSERT INTO users (email, name, phone, password_hash, role) VALUES
+('student1@example.com', 'Rahul Sharma', '+919876543210', '$2b$10$ukitfS9Gve.S6Imyw0ifNOuZSrQ8Sw5ltQGsXsxh0aLKQp4/WJB02', 'STUDENT'),
+('student2@example.com', 'Priya Patel', '+919876543211', '$2b$10$ukitfS9Gve.S6Imyw0ifNOuZSrQ8Sw5ltQGsXsxh0aLKQp4/WJB02', 'STUDENT'),
+('student3@example.com', 'Amit Kumar', '+919876543212', '$2b$10$ukitfS9Gve.S6Imyw0ifNOuZSrQ8Sw5ltQGsXsxh0aLKQp4/WJB02', 'STUDENT'),
+('student4@example.com', 'Sneha Singh', '+919876543213', '$2b$10$ukitfS9Gve.S6Imyw0ifNOuZSrQ8Sw5ltQGsXsxh0aLKQp4/WJB02', 'STUDENT'),
+('student5@example.com', 'Vikram Joshi', '+919876543214', '$2b$10$ukitfS9Gve.S6Imyw0ifNOuZSrQ8Sw5ltQGsXsxh0aLKQp4/WJB02', 'STUDENT')
 ON CONFLICT (email) DO NOTHING;
 
 -- Test Series (matching the frontend mock data)
@@ -24,12 +24,8 @@ INSERT INTO test_series (title, description, duration, is_free, price, status, q
 ON CONFLICT DO NOTHING;
 
 -- Sample Questions for Test Series 01
-INSERT INTO questions (test_series_id, question_text, option_a, option_b, option_c, option_d, correct_answer, explanation, order_index) VALUES
-(1, 'A patient is receiving heparin therapy for deep vein thrombosis. Which laboratory test should the nurse monitor to assess the effectiveness of heparin therapy?', 'Prothrombin time (PT)', 'International normalized ratio (INR)', 'Activated partial thromboplastin time (aPTT)', 'Platelet count', 'C', 'aPTT is used to monitor heparin therapy. The therapeutic range for aPTT is typically 1.5 to 2.5 times the control value. PT and INR are used to monitor warfarin therapy.', 1),
-(1, 'Which intervention is most important for a patient with a chest tube following thoracic surgery?', 'Encourage deep breathing and coughing', 'Keep the drainage system below the level of the chest', 'Clamp the tube when the patient is ambulating', 'Milk the chest tube every hour', 'B', 'The drainage system must be kept below the level of the chest to prevent backflow of fluid into the pleural space. This is critical to prevent complications such as pneumothorax or infection.', 2),
-(1, 'A patient with type 1 diabetes mellitus is experiencing nausea, vomiting, and abdominal pain. The nurse should first assess for:', 'Hypoglycemia', 'Hyperglycemia', 'Diabetic ketoacidosis', 'Hyperosmolar hyperglycemic state', 'C', 'These symptoms are classic signs of diabetic ketoacidosis (DKA). The nurse should assess for Kussmaul respirations, fruity breath odor, and dehydration which are characteristic of DKA.', 3),
-(1, 'Which of the following is the normal adult respiratory rate?', '8–10/min', '12–20/min', '22–30/min', '30–40/min', 'B', 'The normal respiratory rate for adults is 12-20 breaths per minute. Rates outside this range may indicate respiratory distress or other medical conditions requiring assessment.', 4),
-(1, 'A nurse is preparing to administer a subcutaneous injection. Which site is most appropriate for administering heparin?', 'Deltoid muscle', 'Vastus lateralis', 'Abdominal subcutaneous tissue', 'Dorsogluteal muscle', 'C', 'Heparin should be administered in the abdominal subcutaneous tissue to reduce the risk of bruising and hematoma. This site provides adequate absorption with minimal discomfort.', 5);
+-- Note: These will be inserted after we get the actual UUIDs from the test_series table
+-- For now, we'll use a placeholder approach that will be updated after execution
 
 -- Sample Purchases
 INSERT INTO purchases (user_id, test_series_id, amount, provider, payment_id, order_id, status) VALUES

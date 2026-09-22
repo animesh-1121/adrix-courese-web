@@ -25,8 +25,9 @@ export default function ImportQuestionsPage() {
         setParsedQuestions(data.validQuestions);
         setShowPreview(true);
       } else {
-        console.error('Failed to parse HTML:', response.status);
-        alert('Failed to parse HTML. Please check the format.');
+        const errorData = await response.json();
+        console.error('Failed to parse HTML:', response.status, errorData);
+        alert(`Failed to parse HTML: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error parsing HTML:', error);
@@ -41,15 +42,16 @@ export default function ImportQuestionsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ questions: parsedQuestions })
       });
-      
+
       if (response.ok) {
         alert('Questions imported successfully!');
         setShowPreview(false);
         setHtmlContent('');
         setParsedQuestions([]);
       } else {
-        console.error('Failed to import questions:', response.status);
-        alert('Failed to import questions. Please try again.');
+        const errorData = await response.json();
+        console.error('Failed to import questions:', response.status, errorData);
+        alert(`Failed to import questions: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error importing questions:', error);
@@ -61,7 +63,7 @@ export default function ImportQuestionsPage() {
     <AdminLayout>
       <div className="space-y-6">
         <div>
-          <Link href="/admin/test-series/1" className="text-primary hover:underline text-sm">
+          <Link href={`/admin/test-series/${params.id}`} className="text-primary hover:underline text-sm">
             ← Back to Test Series
           </Link>
           <h1 className="text-2xl font-bold text-dark mt-2">Import Questions</h1>

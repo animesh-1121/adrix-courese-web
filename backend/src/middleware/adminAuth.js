@@ -17,11 +17,11 @@ async function requireAdmin(req, res, next) {
     });
   }
 
-  // In development, the token is the user ID
+  // In development, the token is the user ID (UUID string)
   // In production, this would verify a JWT or session
-  const userId = parseInt(adminToken);
+  const userId = adminToken;
   
-  if (isNaN(userId)) {
+  if (!userId) {
     return res.status(401).json({ 
       error: 'Invalid admin authentication token',
       code: 'INVALID_ADMIN_TOKEN'

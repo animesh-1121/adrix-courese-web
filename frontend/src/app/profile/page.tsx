@@ -12,13 +12,18 @@ import { fadeUpVariants, useScrollReveal } from '@/utilities/animations';
 export default function ProfilePage() {
   const router = useRouter();
   const scrollReveal = useScrollReveal();
-  const { isAuthenticated, logout } = useAuth();
-  
+  const { isAuthenticated, logout, isLoading } = useAuth();
+
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Wait for auth to load before checking authentication
+    if (isLoading) {
+      return;
+    }
+
     if (!isAuthenticated) {
       router.push('/login');
       return;
@@ -27,7 +32,7 @@ export default function ProfilePage() {
     const fetchProfile = async () => {
       try {
         const response = await fetchWithAuth('http://localhost:5000/api/auth/me');
-        
+
         if (response.ok) {
           const data = await response.json();
           setUserData(data.user);
@@ -44,7 +49,7 @@ export default function ProfilePage() {
     };
 
     fetchProfile();
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, isLoading, router]);
 
   if (loading) {
     return (

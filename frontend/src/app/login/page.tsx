@@ -1,14 +1,44 @@
 'use client';
 
-import React from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import MainLayout from '@/layouts/MainLayout';
 import Button from '@/components/Button';
+import { useAuth } from '@/hooks/useAuth';
 import { scaleVariants } from '@/utilities/animations';
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get('redirect') || '/dashboard';
+  const { login, isLoading, isAuthenticated } = useAuth();
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.push(redirect);
+    }
+  }, [isLoading, isAuthenticated, redirect, router]);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setIsLoggingIn(true);
+
+    try {
+      const result = await login(email, password);
+      router.push(redirect);
+    } catch (error) {
+      console.error('Login failed:', error);
+      setError(error instanceof Error ? error.message : 'Login failed');
+      setIsLoggingIn(false);
+    }
+  };
 
   return (
     <MainLayout>
@@ -17,71 +47,92 @@ export default function LoginPage() {
           variants={scaleVariants}
           initial="hidden"
           animate="visible"
-          className="max-w-2xl w-full"
+          className="max-w-md w-full"
         >
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-primary rounded-lg flex items-center justify-center mx-auto mb-4">
-              <span className="text-white font-bold text-2xl">N</span>
+          <div className="bg-surface border border-border rounded-lg p-8">
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 bg-primary rounded-lg flex items-center justify-center mx-auto mb-4">
+                <span className="text-white font-bold text-2xl">N</span>
+              </div>
+              <h1 className="text-2xl font-bold text-dark mb-2">Welcome back</h1>
+              <p className="text-muted">Sign in to continue your nursing test preparation.</p>
             </div>
-            <h1 className="text-3xl font-bold text-dark mb-2">Welcome to Nursing Level Up</h1>
-            <p className="text-muted">Select your role to continue</p>
-          </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Student Login Card */}
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="bg-surface border border-border rounded-lg p-8 cursor-pointer hover:border-primary transition-colors"
-              onClick={() => router.push('/login/student')}
-            >
-              <div className="text-center">
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                  </svg>
-                </div>
-                <h2 className="text-xl font-bold text-dark mb-2">Student</h2>
-                <p className="text-sm text-muted mb-4">Access test series, take tests, and track your progress</p>
-                <Button size="sm" className="w-full">
-                  Student Login
-                </Button>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-dark mb-2">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="student@example.com"
+                  required
+                />
               </div>
-            </motion.div>
 
-            {/* Admin Login Card */}
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="bg-surface border border-border rounded-lg p-8 cursor-pointer hover:border-primary transition-colors"
-              onClick={() => router.push('/login/admin')}
-            >
-              <div className="text-center">
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </div>
-                <h2 className="text-xl font-bold text-dark mb-2">Admin</h2>
-                <p className="text-sm text-muted mb-4">Manage users, test series, questions, and platform data</p>
-                <Button size="sm" className="w-full">
-                  Admin Login
-                </Button>
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-dark mb-2">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="Enter your password"
+                  required
+                />
               </div>
-            </motion.div>
-          </div>
 
-          <div className="mt-8 text-center">
-            <p className="text-xs text-muted">
-              Development mode: Use your seeded credentials
-            </p>
-            <p className="text-xs text-muted mt-1">
-              Students: student1@example.com | Admin: admin@nursinglevelup.com
-            </p>
+              {error && (
+                <div className="bg-error/10 text-error text-sm p-3 rounded-lg">
+                  {error}
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                disabled={isLoggingIn || isLoading}
+                size="lg"
+                className="w-full"
+              >
+                {isLoggingIn || isLoading ? 'Signing in...' : 'Sign In'}
+              </Button>
+            </form>
+
+            <div className="mt-6 text-center">
+              <p className="text-sm text-muted">
+                Don't have an account?{' '}
+                <a href="/register" className="text-primary hover:underline">
+                  Register
+                </a>
+              </p>
+            </div>
+
+            <div className="mt-4 text-center">
+              <a
+                href="/admin/login"
+                className="text-sm text-primary hover:underline"
+              >
+                Admin Login
+              </a>
+            </div>
           </div>
         </motion.div>
       </div>
     </MainLayout>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }

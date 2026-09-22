@@ -26,7 +26,7 @@ export async function fetchWithAdminAuth(url: string, options: RequestInit = {})
   // Handle 401 - redirect to admin login
   if (response.status === 401) {
     if (typeof window !== 'undefined') {
-      window.location.href = '/login/admin';
+      window.location.href = '/admin/login';
     }
     throw new Error('Authentication required');
   }

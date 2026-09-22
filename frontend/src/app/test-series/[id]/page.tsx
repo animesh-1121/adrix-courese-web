@@ -52,7 +52,7 @@ export default function TestSeriesDetailPage() {
 
   const handleStartTest = () => {
     if (!isAuthenticated) {
-      router.push(`/login/student?redirect=/tests/${testSeriesId}`);
+      router.push(`/login?redirect=/tests/${testSeriesId}`);
       return;
     }
     router.push(`/tests/${testSeriesId}`);
@@ -60,7 +60,7 @@ export default function TestSeriesDetailPage() {
 
   const handleUnlock = () => {
     if (!isAuthenticated) {
-      router.push(`/login/student?redirect=/unlock/${testSeriesId}`);
+      router.push(`/login?redirect=/unlock/${testSeriesId}`);
       return;
     }
     router.push(`/unlock/${testSeriesId}`);

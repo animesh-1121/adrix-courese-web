@@ -13,18 +13,28 @@ export default function UnlockPage() {
   const router = useRouter();
   const testSeriesId = params.id as string;
   const scrollReveal = useScrollReveal();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const [testSeries, setTestSeries] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<'razorpay' | 'stripe'>('razorpay');
 
   useEffect(() => {
+    console.log('Unlock page auth check:', { isLoading, isAuthenticated, testSeriesId });
+
+    // Wait for auth to load before checking authentication
+    if (isLoading) {
+      console.log('Still loading auth, waiting...');
+      return;
+    }
+
     if (!isAuthenticated) {
+      console.log('Not authenticated, redirecting to login');
       router.push(`/login?redirect=/unlock/${testSeriesId}`);
       return;
     }
 
+    console.log('Authenticated, fetching test series');
     const fetchTestSeries = async () => {
       try {
         const response = await fetch(`http://localhost:5000/api/test-series/${testSeriesId}`);
@@ -42,7 +52,7 @@ export default function UnlockPage() {
     };
 
     fetchTestSeries();
-  }, [testSeriesId, isAuthenticated, router]);
+  }, [testSeriesId, isAuthenticated, isLoading, router]);
 
   if (loading) {
     return (

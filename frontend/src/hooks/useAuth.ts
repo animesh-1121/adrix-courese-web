@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 
 interface User {
-  id: number;
+  id: string;
   name: string;
   email: string;
   phone?: string;
@@ -16,8 +16,8 @@ interface AuthState {
   isLoading: boolean;
 }
 
-const STUDENT_AUTH_STORAGE_KEY = 'nursing_level_up_student_auth';
-const STUDENT_TOKEN_KEY = 'nursing_level_up_student_token';
+const AUTH_STORAGE_KEY = 'nursing_level_up_auth';
+const AUTH_TOKEN_KEY = 'nursing_level_up_token';
 
 export function useAuth() {
   const [authState, setAuthState] = useState<AuthState>({
@@ -28,12 +28,15 @@ export function useAuth() {
 
   useEffect(() => {
     // Check localStorage on mount
-    const storedAuth = localStorage.getItem(STUDENT_AUTH_STORAGE_KEY);
-    const storedToken = localStorage.getItem(STUDENT_TOKEN_KEY);
+    const storedAuth = localStorage.getItem(AUTH_STORAGE_KEY);
+    const storedToken = localStorage.getItem(AUTH_TOKEN_KEY);
+
+    console.log('Auth initialization:', { hasAuth: !!storedAuth, hasToken: !!storedToken });
 
     if (storedAuth && storedToken) {
       try {
         const parsed = JSON.parse(storedAuth);
+        console.log('Restored auth state:', { user: parsed, token: storedToken });
         setAuthState({
           isAuthenticated: true,
           user: parsed,
@@ -48,6 +51,7 @@ export function useAuth() {
         });
       }
     } else {
+      console.log('No stored auth found');
       setAuthState({
         isAuthenticated: false,
         user: null,
@@ -56,14 +60,14 @@ export function useAuth() {
     }
   }, []);
 
-  const login = async (email: string): Promise<{ user: User; needsPhone: boolean }> => {
+  const login = async (email: string, password: string): Promise<User> => {
     setAuthState(prev => ({ ...prev, isLoading: true }));
 
     try {
       const response = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email, password })
       });
 
       if (!response.ok) {
@@ -73,9 +77,16 @@ export function useAuth() {
 
       const data = await response.json();
 
-      // Store in student-specific localStorage keys
-      localStorage.setItem(STUDENT_TOKEN_KEY, data.authToken);
-      localStorage.setItem(STUDENT_AUTH_STORAGE_KEY, JSON.stringify(data.user));
+      console.log('Login successful:', { user: data.user, token: data.authToken });
+
+      // Store in localStorage
+      localStorage.setItem(AUTH_TOKEN_KEY, data.authToken);
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(data.user));
+
+      console.log('Stored auth data:', {
+        token: localStorage.getItem(AUTH_TOKEN_KEY),
+        user: localStorage.getItem(AUTH_STORAGE_KEY)
+      });
 
       setAuthState({
         isAuthenticated: true,
@@ -83,35 +94,34 @@ export function useAuth() {
         isLoading: false
       });
 
-      return {
-        user: data.user,
-        needsPhone: data.needsPhone
-      };
+      return data.user;
     } catch (error) {
+      console.error('Login error:', error);
       setAuthState(prev => ({ ...prev, isLoading: false }));
       throw error;
     }
   };
 
-  const completeProfile = async (phone: string): Promise<User> => {
+  const register = async (name: string, email: string, phone: string, password: string): Promise<User> => {
     setAuthState(prev => ({ ...prev, isLoading: true }));
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/complete-profile', {
+      const response = await fetch('http://localhost:5000/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: authState.user?.id, phone })
+        body: JSON.stringify({ name, email, phone, password })
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to complete profile');
+        throw new Error(error.error || 'Registration failed');
       }
 
       const data = await response.json();
 
-      // Update localStorage
-      localStorage.setItem(STUDENT_AUTH_STORAGE_KEY, JSON.stringify(data.user));
+      // Store in localStorage
+      localStorage.setItem(AUTH_TOKEN_KEY, String(data.authToken));
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(data.user));
 
       setAuthState({
         isAuthenticated: true,
@@ -133,15 +143,15 @@ export function useAuth() {
       isLoading: false
     };
 
-    localStorage.removeItem(STUDENT_AUTH_STORAGE_KEY);
-    localStorage.removeItem(STUDENT_TOKEN_KEY);
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+    localStorage.removeItem(AUTH_TOKEN_KEY);
     setAuthState(newAuthState);
   };
 
   return {
     ...authState,
     login,
-    completeProfile,
+    register,
     logout
   };
 }

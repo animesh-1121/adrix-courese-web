@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 
 interface User {
-  id: number;
+  id: string;
   name: string;
   email: string;
   phone?: string;
@@ -16,7 +16,6 @@ interface AuthState {
   isLoading: boolean;
 }
 
-const ADMIN_AUTH_STORAGE_KEY = 'adminAuth';
 const ADMIN_TOKEN_KEY = 'adminToken';
 const ADMIN_USER_KEY = 'adminUser';
 
@@ -29,11 +28,10 @@ export function useAdminAuth() {
 
   useEffect(() => {
     // Check localStorage on mount
-    const storedAuth = localStorage.getItem(ADMIN_AUTH_STORAGE_KEY);
     const storedToken = localStorage.getItem(ADMIN_TOKEN_KEY);
     const storedUser = localStorage.getItem(ADMIN_USER_KEY);
 
-    if (storedAuth === 'true' && storedToken && storedUser) {
+    if (storedToken && storedUser) {
       try {
         const parsed = JSON.parse(storedUser);
         setAuthState({
@@ -58,14 +56,14 @@ export function useAdminAuth() {
     }
   }, []);
 
-  const login = async (email: string): Promise<{ user: User }> => {
+  const login = async (email: string, password: string): Promise<{ user: User }> => {
     setAuthState(prev => ({ ...prev, isLoading: true }));
 
     try {
       const response = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email, password })
       });
 
       if (!response.ok) {
@@ -81,7 +79,6 @@ export function useAdminAuth() {
       }
 
       // Store in admin-specific localStorage keys
-      localStorage.setItem(ADMIN_AUTH_STORAGE_KEY, 'true');
       localStorage.setItem(ADMIN_TOKEN_KEY, data.authToken);
       localStorage.setItem(ADMIN_USER_KEY, JSON.stringify(data.user));
 
@@ -107,7 +104,6 @@ export function useAdminAuth() {
       isLoading: false
     };
 
-    localStorage.removeItem(ADMIN_AUTH_STORAGE_KEY);
     localStorage.removeItem(ADMIN_TOKEN_KEY);
     localStorage.removeItem(ADMIN_USER_KEY);
     setAuthState(newAuthState);

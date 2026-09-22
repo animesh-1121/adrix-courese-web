@@ -104,6 +104,9 @@ export default function AdminTestSeriesPage() {
                       <Link href={`/admin/test-series/${ts.id}/questions`} className="text-primary hover:underline text-sm">
                         Questions
                       </Link>
+                      <Link href={`/admin/test-series/${ts.id}/import`} className="text-primary hover:underline text-sm">
+                        Import
+                      </Link>
                     </div>
                   </td>
                 </tr>

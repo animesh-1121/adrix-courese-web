@@ -10,6 +10,7 @@ export default function AdminLoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -21,7 +22,7 @@ export default function AdminLoginPage() {
       const response = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email, password })
       });
 
       if (!response.ok) {
@@ -37,7 +38,6 @@ export default function AdminLoginPage() {
       }
 
       // Store admin auth with separate keys
-      localStorage.setItem('adminAuth', 'true');
       localStorage.setItem('adminToken', data.authToken);
       localStorage.setItem('adminUser', JSON.stringify(data.user));
 
@@ -83,6 +83,21 @@ export default function AdminLoginPage() {
               />
             </div>
 
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-dark mb-2">
+                Password
+              </label>
+              <input
+                type="password"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                placeholder="Enter your password"
+                required
+              />
+            </div>
+
             {error && (
               <div className="bg-error/10 text-error text-sm p-3 rounded-lg">
                 {error}
@@ -99,19 +114,13 @@ export default function AdminLoginPage() {
             </Button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-xs text-muted">
-              Development mode: Use admin@nursinglevelup.com
-            </p>
-          </div>
-
           <div className="mt-4 text-center">
             <button
               type="button"
               onClick={() => router.push('/login')}
               className="text-sm text-primary hover:underline"
             >
-              Back to role selection
+              Back to Student Login
             </button>
           </div>
         </div>

@@ -14,15 +14,20 @@ export default function ResultsPage() {
   const params = useParams();
   const router = useRouter();
   const attemptId = params.id as string;
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const scrollReveal = useScrollReveal();
-  
+
   const [result, setResult] = useState<any>(null);
   const [answers, setAnswers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Wait for auth to load before checking authentication
+    if (isLoading) {
+      return;
+    }
+
     if (!isAuthenticated) {
       router.push('/login');
       return;
@@ -31,7 +36,7 @@ export default function ResultsPage() {
     const fetchResult = async () => {
       try {
         const response = await fetchWithAuth(`http://localhost:5000/api/tests/${attemptId}/result`);
-        
+
         if (response.ok) {
           const data = await response.json();
           setResult(data.attempt);
@@ -49,7 +54,7 @@ export default function ResultsPage() {
     };
 
     fetchResult();
-  }, [attemptId, isAuthenticated, router]);
+  }, [attemptId, isAuthenticated, isLoading, router]);
 
   if (loading) {
     return (

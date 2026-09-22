@@ -28,7 +28,7 @@ export default function TestPage() {
   const router = useRouter();
   const testSeriesId = params.id as string;
   const scrollReveal = useScrollReveal();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, isLoading } = useAuth();
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, number>>({});
@@ -42,6 +42,11 @@ export default function TestPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Wait for auth to load before checking authentication
+    if (isLoading) {
+      return;
+    }
+
     // Check authentication
     if (!isAuthenticated) {
       router.push(`/login?redirect=/tests/${testSeriesId}`);
@@ -102,7 +107,7 @@ export default function TestPage() {
     };
 
     fetchData();
-  }, [testSeriesId, isAuthenticated, router]);
+  }, [testSeriesId, isAuthenticated, isLoading, router]);
 
   useEffect(() => {
     if (!testSeries) return;

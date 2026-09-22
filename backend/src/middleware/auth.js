@@ -17,11 +17,11 @@ function requireAuth(req, res, next) {
     });
   }
 
-  // In development, the token is the user ID
+  // In development, the token is the user ID (UUID string)
   // In production, this would verify a JWT or session
-  const userId = parseInt(authToken);
+  const userId = authToken;
   
-  if (isNaN(userId)) {
+  if (!userId) {
     return res.status(401).json({ 
       error: 'Invalid authentication token',
       code: 'INVALID_TOKEN'
@@ -41,8 +41,8 @@ function optionalAuth(req, res, next) {
   const authToken = req.headers['x-auth-token'];
   
   if (authToken) {
-    const userId = parseInt(authToken);
-    if (!isNaN(userId)) {
+    const userId = authToken;
+    if (userId) {
       req.userId = userId;
     }
   }

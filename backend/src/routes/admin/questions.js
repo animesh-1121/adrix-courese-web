@@ -11,7 +11,7 @@ router.get('/test-series/:id/questions', requireAdmin, async (req, res) => {
     const { id } = req.params;
     
     const result = await query(
-      'SELECT * FROM questions WHERE test_series_id = $1 ORDER BY order_index',
+      'SELECT * FROM questions WHERE test_series_id = $1 ORDER BY order_number',
       [id]
     );
     
@@ -26,27 +26,27 @@ router.get('/test-series/:id/questions', requireAdmin, async (req, res) => {
 router.post('/test-series/:id/questions', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const { question_text, option_a, option_b, option_c, option_d, correct_answer, explanation } = req.body;
+    const { question_text, option_a, option_b, option_c, option_d, correct_option, explanation } = req.body;
     
     // Validation
-    if (!question_text || !option_a || !option_b || !option_c || !option_d || !correct_answer) {
+    if (!question_text || !option_a || !option_b || !option_c || !option_d || !correct_option) {
       return res.status(400).json({ error: 'All fields are required' });
     }
     
-    if (!['A', 'B', 'C', 'D'].includes(correct_answer.toUpperCase())) {
+    if (!['A', 'B', 'C', 'D'].includes(correct_option.toUpperCase())) {
       return res.status(400).json({ error: 'Correct answer must be A, B, C, or D' });
     }
     
-    // Get current max order index
+    // Get current max order number
     const maxOrderResult = await query(
-      'SELECT COALESCE(MAX(order_index), 0) as max_order FROM questions WHERE test_series_id = $1',
+      'SELECT COALESCE(MAX(order_number), 0) as max_order FROM questions WHERE test_series_id = $1',
       [id]
     );
     const nextOrder = parseInt(maxOrderResult.rows[0].max_order) + 1;
     
     const result = await query(
-      'INSERT INTO questions (test_series_id, question_text, option_a, option_b, option_c, option_d, correct_answer, explanation, order_index) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
-      [id, question_text, option_a, option_b, option_c, option_d, correct_answer.toUpperCase(), explanation, nextOrder]
+      'INSERT INTO questions (test_series_id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation, order_number) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
+      [id, question_text, option_a, option_b, option_c, option_d, correct_option.toUpperCase(), explanation, nextOrder]
     );
     
     // Update test series question count
@@ -66,15 +66,15 @@ router.post('/test-series/:id/questions', requireAdmin, async (req, res) => {
 router.put('/questions/:id', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const { question_text, option_a, option_b, option_c, option_d, correct_answer, explanation } = req.body;
+    const { question_text, option_a, option_b, option_c, option_d, correct_option, explanation } = req.body;
     
-    if (!['A', 'B', 'C', 'D'].includes(correct_answer?.toUpperCase())) {
+    if (!['A', 'B', 'C', 'D'].includes(correct_option?.toUpperCase())) {
       return res.status(400).json({ error: 'Correct answer must be A, B, C, or D' });
     }
     
     const result = await query(
-      'UPDATE questions SET question_text = $1, option_a = $2, option_b = $3, option_c = $4, option_d = $5, correct_answer = $6, explanation = $7 WHERE id = $8 RETURNING *',
-      [question_text, option_a, option_b, option_c, option_d, correct_answer?.toUpperCase(), explanation, id]
+      'UPDATE questions SET question_text = $1, option_a = $2, option_b = $3, option_c = $4, option_d = $5, correct_option = $6, explanation = $7 WHERE id = $8 RETURNING *',
+      [question_text, option_a, option_b, option_c, option_d, correct_option?.toUpperCase(), explanation, id]
     );
     
     if (result.rows.length === 0) {
@@ -123,6 +123,8 @@ router.post('/test-series/:id/import/html', requireAdmin, async (req, res) => {
     const { id } = req.params;
     const { html } = req.body;
     
+    console.log('HTML import request:', { testSeriesId: id, htmlLength: html?.length });
+    
     if (!html) {
       return res.status(400).json({ error: 'HTML content is required' });
     }
@@ -130,6 +132,8 @@ router.post('/test-series/:id/import/html', requireAdmin, async (req, res) => {
     // Simple HTML parser - extract questions
     // This is a basic implementation - in production, use a proper HTML parser
     const questions = parseHTMLQuestions(html);
+    
+    console.log('Parsed questions:', questions.length);
     
     // Validate questions
     const validQuestions = [];
@@ -159,7 +163,10 @@ router.post('/test-series/:id/import/html', requireAdmin, async (req, res) => {
     });
   } catch (error) {
     console.error('Import HTML error:', error);
-    res.status(500).json({ error: 'Failed to import HTML' });
+    res.status(500).json({ 
+      error: 'Failed to import HTML',
+      details: error.message 
+    });
   }
 });
 
@@ -169,21 +176,35 @@ router.post('/test-series/:id/import/confirm', requireAdmin, async (req, res) =>
     const { id } = req.params;
     const { questions } = req.body;
     
+    console.log('Import confirm request:', { testSeriesId: id, questionCount: questions?.length });
+    
     if (!questions || !Array.isArray(questions)) {
       return res.status(400).json({ error: 'Questions array is required' });
     }
     
-    // Get current max order index
+    // Verify test series exists
+    const testSeriesCheck = await query('SELECT id FROM test_series WHERE id = $1', [id]);
+    if (testSeriesCheck.rows.length === 0) {
+      return res.status(404).json({ 
+        error: 'Test series not found',
+        details: `No test series found with ID: ${id}`
+      });
+    }
+    
+    // Get current max order number
     const maxOrderResult = await query(
-      'SELECT COALESCE(MAX(order_index), 0) as max_order FROM questions WHERE test_series_id = $1',
+      'SELECT COALESCE(MAX(order_number), 0) as max_order FROM questions WHERE test_series_id = $1',
       [id]
     );
     let nextOrder = parseInt(maxOrderResult.rows[0].max_order) + 1;
     
+    console.log('Starting import with order:', nextOrder);
+    
     // Insert questions
     for (const q of questions) {
+      console.log('Inserting question:', { question: q.question.substring(0, 50), hasOptions: q.options?.length });
       await query(
-        'INSERT INTO questions (test_series_id, question_text, option_a, option_b, option_c, option_d, correct_answer, explanation, order_index) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
+        'INSERT INTO questions (test_series_id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation, order_number) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
         [id, q.question, q.options[0], q.options[1], q.options[2], q.options[3], q.correctAnswer.toUpperCase(), q.explanation, nextOrder]
       );
       nextOrder++;
@@ -195,10 +216,14 @@ router.post('/test-series/:id/import/confirm', requireAdmin, async (req, res) =>
       [questions.length, id]
     );
     
+    console.log('Import completed successfully');
     res.json({ message: `Successfully imported ${questions.length} questions` });
   } catch (error) {
     console.error('Confirm import error:', error);
-    res.status(500).json({ error: 'Failed to save imported questions' });
+    res.status(500).json({ 
+      error: 'Failed to save imported questions',
+      details: error.message 
+    });
   }
 });
 
