@@ -7,5 +7,10 @@
     "build": "cd web && npm run build",
     "start": "cd web && npm start",
     "lint": "cd web && npm run lint"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1137.0",
+    "@aws-sdk/s3-request-presigner": "^3.1137.0",
+    "dotenv": "^18.0.2"
   }
 }

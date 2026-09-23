@@ -11,8 +11,8 @@ import pg from 'pg';
 import * as seed from './seed-data.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-dotenv.config({ path: path.join(root, '.env.local'), quiet: true });
-dotenv.config({ path: path.join(root, '.env'), quiet: true });
+dotenv.config({ path: path.join(root, '.env.local'), quiet: true, override: true });
+dotenv.config({ path: path.join(root, '.env'), quiet: true, override: true });
 
 const args = process.argv.slice(2);
 const flag = (name) => args.includes(name);
